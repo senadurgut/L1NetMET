@@ -7,11 +7,12 @@ import uproot
 def getArrays(inputFiles, branches, nFiles=1, fname="data.parquet"):
 
     files = [{file: 'Events'} for file in inputFiles][:nFiles]
-    
+
     # get the data
     data = ak.concatenate([batch for batch in uproot.iterate(files, filter_name=branches)])
     data = formatBranches(data)
-    ak.to_parquet(data, fname)
+    if fname:
+        ak.to_parquet(data, fname)
 
     return data
 
@@ -131,7 +132,7 @@ def getSum(data, sumType):
     return etSum
 
 
-def makeDataframe(collections, fileName, nObj=0, keepStruct=False):
+def makeDataframe(collections, fileName=None, nObj=0, keepStruct=False):
     
     object_dfs = []
     for coll in collections:
@@ -156,14 +157,16 @@ def makeDataframe(collections, fileName, nObj=0, keepStruct=False):
     else:
         df.columns = ["{}_{}".format(col[0], col[1]) for col in df.columns]
 
-    df.to_hdf(fileName, 'online', mode='w')
-    
+    if fileName:
+        df.to_hdf(fileName, 'online', mode='w')
+
     return df
 
 
 def arrayToDataframe(array, label, fileName):
 
     df = pd.DataFrame(ak.to_list(array))
-    df.to_hdf(fileName, label, mode='a')
+    if fileName:
+        df.to_hdf(fileName, label, mode='a')
     
     return df
