@@ -73,6 +73,8 @@ def getPUPPIMET(data):
     
     return puppiMET, puppiMET_noMu
 
+def apply_pt_cut(data, puppiMET_noMu, cut_value = -1):
+    return data[puppiMET_noMu['PuppiMET_pt'] > cut_value], puppiMET_noMu[puppiMET_noMu['PuppiMET_pt'] > cut_value]
 
 def flatten(data, puppiMET_noMu, types=[]):
     
