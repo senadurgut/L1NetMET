@@ -76,6 +76,13 @@ def getPUPPIMET(data):
 def apply_pt_cut(data, puppiMET_noMu, cut_value = -1):
     return data[puppiMET_noMu['PuppiMET_pt'] > cut_value], puppiMET_noMu[puppiMET_noMu['PuppiMET_pt'] > cut_value]
 
+def remove_saturated(data, puppiMET_noMu):
+    for col in data.columns:
+        if "pt" in col:
+            data = data[data[col] < 1000]
+            puppiMET_noMu = puppiMET_noMu[data[col] < 1000]
+    return data, puppiMET_noMu
+
 def flatten(data, puppiMET_noMu, types=[]):
     
     cutoff = 800
