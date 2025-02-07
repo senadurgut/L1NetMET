@@ -179,3 +179,73 @@ def arrayToDataframe(array, label, fileName):
         df.to_hdf(fileName, label, mode='a')
     
     return df
+
+def remove_methf(data, puppiMET_noMu):
+    df = pd.concat([data, puppiMET_noMu], axis=1)
+    df.drop(columns = ['methf_0_pt'])
+    Y = df[['puppiMET_noMu']]
+    X = df.drop(columns = ['puppiMET_noMu'] )
+    return X, Y 
+
+import numpy as np
+import pandas as pd
+
+def sort_jets(data, puppiMET_noMu):
+    """Sorts jets in each event by pT in descending order."""
+    
+    num_jets = 3  
+    jet_features = ['eta', 'phi', 'pt'] 
+    
+    sorted_data = []  
+    
+    for _, row in df.iterrows():
+        jets = []
+        for i in range(num_jets):
+            jet = {
+                'eta': row[f'Jet_{i}_eta'],
+                'phi': row[f'Jet_{i}_phi'],
+                'pt': row[f'Jet_{i}_pt']
+            }
+            jets.append(jet)
+
+        
+        jets = sorted(jets, key=lambda x: x['pt'], reverse=True)
+
+        
+        sorted_row = []
+        for i in range(num_jets):
+            sorted_row.extend([jets[i]['eta'], jets[i]['phi'], jets[i]['pt']])
+        
+        
+        non_jet_values = row[['ntt_0_pt', 'PuppiMET_pt']].values
+        sorted_data.append(sorted_row + list(non_jet_values))
+
+    
+    sorted_columns = [f'Jet_{i}_{feature}' for i in range(num_jets) for feature in jet_features]
+    sorted_columns += ['ntt_0_pt', 'PuppiMET_pt']
+    
+    sorted_df = pd.DataFrame(sorted_data, columns=sorted_columns)
+    
+    return sorted_df, puppiMET_noMu
+
+def compute_mjjj(data, puppiMET_noMu):
+    def compute_three_jet_mass(pt1, eta1, phi1, pt2, eta2, phi2, pt3, eta3, phi3):
+        def mass_squared(pt_a, eta_a, phi_a, pt_b, eta_b, phi_b):
+            return 2 * pt_a * pt_b * (np.cosh(eta_a - eta_b) - np.cos(phi_a - phi_b))
+    
+        # Compute all pairwise mass contributions
+        m12_sq = mass_squared(pt1, eta1, phi1, pt2, eta2, phi2)
+        m13_sq = mass_squared(pt1, eta1, phi1, pt3, eta3, phi3)
+        m23_sq = mass_squared(pt2, eta2, phi2, pt3, eta3, phi3)
+
+        # Compute total mass squared
+        m_sq = m12_sq + m13_sq + m23_sq
+        return np.sqrt(np.maximum(m_sq, 0))
+        
+    data['m_jjj'] = compute_three_jet_mass(
+    data['Jet_0_pt'], data['Jet_0_eta'], data['Jet_0_phi'],
+    data['Jet_1_pt'], data['Jet_1_eta'], data['Jet_1_phi'],
+    data['Jet_2_pt'], data['Jet_2_eta'], data['Jet_2_phi']
+    )
+
+    return data, puppiMET_noMu
