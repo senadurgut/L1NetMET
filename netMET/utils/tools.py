@@ -180,58 +180,6 @@ def arrayToDataframe(array, label, fileName):
     
     return df
 
-def remove_methf(data, puppiMET_noMu):
-    df = pd.concat([data, puppiMET_noMu], axis=1)
-    df.drop(columns = ['methf_0_pt'])
-    Y = df[['puppiMET_noMu']]
-    X = df.drop(columns = ['puppiMET_noMu'] )
-    return X, Y 
-
-import numpy as np
-import pandas as pd
-
-def sort_jets(data, puppiMET_noMu):
-    """Sorts jets in each event by pT in descending order."""
-    
-    num_jets = 3  
-    jet_features = ['eta', 'phi', 'pt'] 
-    
-    sorted_data = []  
-    
-    for _, row in df.iterrows():
-        jets = []
-        for i in range(num_jets):
-            jet = {
-                'eta': row[f'Jet_{i}_eta'],
-                'phi': row[f'Jet_{i}_phi'],
-                'pt': row[f'Jet_{i}_pt']
-            }
-            jets.append(jet)
-
-        
-        jets = sorted(jets, key=lambda x: x['pt'], reverse=True)
-
-        
-        sorted_row = []
-        for i in range(num_jets):
-            sorted_row.extend([jets[i]['eta'], jets[i]['phi'], jets[i]['pt']])
-        
-        
-        non_jet_values = row[['ntt_0_pt', 'PuppiMET_pt']].values
-        sorted_data.append(sorted_row + list(non_jet_values))
-
-    
-    sorted_columns = [f'Jet_{i}_{feature}' for i in range(num_jets) for feature in jet_features]
-    sorted_columns += ['ntt_0_pt', 'PuppiMET_pt']
-    
-    sorted_df = pd.DataFrame(sorted_data, columns=sorted_columns)
-    
-    return sorted_df, puppiMET_noMu
-
-import numpy as np
-
-import numpy as np
-
 def compute_mjjjj(data, puppiMET_noMu):
     def compute_four_jet_mass(pt1, eta1, phi1, pt2, eta2, phi2, pt3, eta3, phi3, pt4, eta4, phi4):
         # Compute individual jet momenta
