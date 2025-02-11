@@ -228,24 +228,43 @@ def sort_jets(data, puppiMET_noMu):
     
     return sorted_df, puppiMET_noMu
 
-def compute_mjjj(data, puppiMET_noMu):
-    def compute_three_jet_mass(pt1, eta1, phi1, pt2, eta2, phi2, pt3, eta3, phi3):
-        def mass_squared(pt_a, eta_a, phi_a, pt_b, eta_b, phi_b):
-            return 2 * pt_a * pt_b * (np.cosh(eta_a - eta_b) - np.cos(phi_a - phi_b))
-    
-        # Compute all pairwise mass contributions
-        m12_sq = mass_squared(pt1, eta1, phi1, pt2, eta2, phi2)
-        m13_sq = mass_squared(pt1, eta1, phi1, pt3, eta3, phi3)
-        m23_sq = mass_squared(pt2, eta2, phi2, pt3, eta3, phi3)
+import numpy as np
 
-        # Compute total mass squared
-        m_sq = m12_sq + m13_sq + m23_sq
-        return np.sqrt(np.maximum(m_sq, 0))
-        
-    data['m_jjj'] = compute_three_jet_mass(
-    data['Jet_0_pt'], data['Jet_0_eta'], data['Jet_0_phi'],
-    data['Jet_1_pt'], data['Jet_1_eta'], data['Jet_1_phi'],
-    data['Jet_2_pt'], data['Jet_2_eta'], data['Jet_2_phi']
+import numpy as np
+
+def compute_mjjjj(data, puppiMET_noMu):
+    def compute_four_jet_mass(pt1, eta1, phi1, pt2, eta2, phi2, pt3, eta3, phi3, pt4, eta4, phi4):
+        # Compute individual jet momenta
+        def jet_four_momentum(pt, eta, phi):
+            px = pt * np.cos(phi)
+            py = pt * np.sin(phi)
+            pz = pt * np.sinh(eta)
+            E  = np.sqrt(px**2 + py**2 + pz**2)  # Assuming massless jets
+            return px, py, pz, E
+
+        # Get four-momentum components for each jet
+        px1, py1, pz1, E1 = jet_four_momentum(pt1, eta1, phi1)
+        px2, py2, pz2, E2 = jet_four_momentum(pt2, eta2, phi2)
+        px3, py3, pz3, E3 = jet_four_momentum(pt3, eta3, phi3)
+        px4, py4, pz4, E4 = jet_four_momentum(pt4, eta4, phi4)
+
+        # Compute total four-momentum
+        E_total  = E1 + E2 + E3 + E4
+        px_total = px1 + px2 + px3 + px4
+        py_total = py1 + py2 + py3 + py4
+        pz_total = pz1 + pz2 + pz3 + pz4
+
+        # Compute invariant mass squared 
+        M_inv_squared = np.maximum(E_total**2 - px_total**2 - py_total**2 - pz_total**2, 0)
+        return M_inv_squared
+
+    # Compute invariant mass for the four leading jets
+    data['m_jjjj_sq'] = compute_four_jet_mass(
+        data['Jet_0_pt'], data['Jet_0_eta'], data['Jet_0_phi'],
+        data['Jet_1_pt'], data['Jet_1_eta'], data['Jet_1_phi'],
+        data['Jet_2_pt'], data['Jet_2_eta'], data['Jet_2_phi'],
+        data['Jet_3_pt'], data['Jet_3_eta'], data['Jet_3_phi']
     )
-
+    
     return data, puppiMET_noMu
+
